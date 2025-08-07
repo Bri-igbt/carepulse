@@ -11,6 +11,7 @@ import SumbitButton from "../SumbitButton"
 import { useState } from "react"
 import { UserFormValidation } from "@/lib/validation"
 import { useRouter } from "next/navigation"
+import { createUser } from "@/lib/actions/patient.actions"
 
 export enum FormFieldType {
     INPUT = "input",
@@ -45,15 +46,18 @@ const PatientsForm = () => {
         setIsLoading(true)
 
         try {
-            // const userData = { name, phone, email }
+            const userData = { name, phone, email }
 
-            // const user = await createUser(userData);
+            const newUser = await createUser(userData);
 
-            // if (user) router.push(`/patients/${user.$id}/register`)
-
+        if (newUser) {
+            router.push(`/patients/${newUser.$id}/register`);
+        }
         } catch (error) {
             console.log(error);
         }
+
+    setIsLoading(false);
         
     }
 
