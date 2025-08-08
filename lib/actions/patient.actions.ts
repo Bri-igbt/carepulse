@@ -1,5 +1,6 @@
 import { ID, Query } from "node-appwrite"
 import { users } from "../appwrite.config"
+import { parseStringify } from "../utils"
 
 export const createUser = async (user: CreateUserParams) => {
     
@@ -11,13 +12,27 @@ export const createUser = async (user: CreateUserParams) => {
             undefined, 
             user.name
         )
+        console.log({ newUser })
+
+        return parseStringify(newUser);
     } catch (error: any) {
+        // If the error is a conflict (409), it means the user already exists
         if (error && error?.code === 409) {
             const existingUser = await users.list([
-                Query.equal('email', [user.email])
-            ])
+                Query.equal('email', [user.email]),
+            ]);
 
             return existingUser?.users?.[0]
         }
+    }
+}
+
+export const getUser = async (userId: string) => {
+    try {
+        const user = await users.get(userId);
+
+        return parseStringify(user);
+    } catch (error) {
+        console.log(error);
     }
 }
