@@ -3,8 +3,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import Image from "next/image";
-
-import { Button } from "@/components/ui/button";
 import { Form, FormControl } from "@/components/ui/form";
 import CustomFormField from "../CustomFormField";
 import SumbitButton from "../SumbitButton";
@@ -14,10 +12,12 @@ import { useRouter } from "next/navigation";
 import { createUser, getUser } from "@/lib/actions/patient.actions";
 import { FormFieldType } from "./PatientsForm";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
-import { Doctors, GenderOptions, IdentificationTypes } from "@/constants";
+import { Doctors, GenderOptions, IdentificationTypes, PatientFormDefaultValues } from "@/constants";
 import { Label } from "../ui/label";
 import { SelectItem } from "../ui/select";
 import FileUploader from "../FileUploader";
+import { PatientFormValidation } from "@/lib/validation";
+import { registerPatient } from "@/lib/actions/patient.actions";
 
 
 const RegisterForm = ({ user }: { user: User }) => {
@@ -28,33 +28,91 @@ const RegisterForm = ({ user }: { user: User }) => {
   // This schema will be used to validate the form inputs.
 
   // 1. Define your form.
-  const form = useForm<z.infer<typeof UserFormValidation>>({
-    resolver: zodResolver(UserFormValidation),
+  const form = useForm<z.infer<typeof PatientFormValidation>>({
+    //@ts-ignore
+    resolver: zodResolver(PatientFormValidation),
+        ...PatientFormDefaultValues,
     defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
+    name: "",
+    email: "",
+    phone: "",
+    birthDate: new Date(),
+    gender: "Male",
+    address: "",
+    occupation: "",
+    emergencyContactName: "",
+    emergencyContactNumber: "",
+    primaryPhysician: "",
+    insuranceProvider: "",
+    insurancePolicyNumber: "",
+    allergies: "",
+    currentMedication: "",
+    familyMedicalHistory: "",
+    pastMedicalHistory: "",
+    identificationType: "",
+    identificationNumber: "",
+    identificationDocument: undefined,
+    privacyConsent: false,
     },
   });
 
   // 2. Define a submit handler.
-  async function onSubmit({ name, phone, email }: z.infer<typeof UserFormValidation>) {
+  async function onSubmit(values: z.infer<typeof PatientFormValidation>) {
     // ✅ This will be type-safe and validated.
     setIsLoading(true);
 
+    let formData;
+    if (
+      values.identificationDocument &&
+      values.identificationDocument?.length > 0
+    ) {
+      const blobFile = new Blob([values.identificationDocument[0]], {
+        type: values.identificationDocument[0].type,
+      });
+
+      formData = new FormData();
+      formData.append("blobFile", blobFile);
+      formData.append("fileName", values.identificationDocument[0].name);
+    }
+
     try {
-      const userData = { name, phone, email };
+      const patient = {
+        userId: user.$id,
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        birthDate: new Date(values.birthDate),
+        gender: values.gender,
+        address: values.address,
+        occupation: values.occupation,
+        emergencyContactName: values.emergencyContactName,
+        emergencyContactNumber: values.emergencyContactNumber,
+        primaryPhysician: values.primaryPhysician,
+        insuranceProvider: values.insuranceProvider,
+        insurancePolicyNumber: values.insurancePolicyNumber,
+        allergies: values.allergies,
+        currentMedication: values.currentMedication,
+        familyMedicalHistory: values.familyMedicalHistory,
+        pastMedicalHistory: values.pastMedicalHistory,
+        identificationType: values.identificationType,
+        identificationNumber: values.identificationNumber,
+        identificationDocument: values.identificationDocument
+          ? formData
+          : undefined,
+        privacyConsent: values.privacyConsent,
+      };
 
-      const newUser = await createUser(userData);
+      //@ts-ignore
+      const newPatient = await registerPatient(patient);
 
-      if (newUser) {
-        router.push(`/patients/${newUser.$id}/register`);
+       if (newPatient) {
+        router.push(`/patients/${user.$id}/new-appointment`);
       }
     } catch (error) {
       console.log(error);
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   }
 
   return (
@@ -108,7 +166,7 @@ const RegisterForm = ({ user }: { user: User }) => {
           <CustomFormField
             control={form.control}
             fieldType={FormFieldType.DATE}
-            name="birthday"
+            name="birthDay"
             label="Date of Birth"
           />
 
