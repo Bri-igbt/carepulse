@@ -3,20 +3,24 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import Image from "next/image";
+
+import { Button } from "@/components/ui/button";
 import { Form, FormControl } from "@/components/ui/form";
 import CustomFormField from "../CustomFormField";
 import SumbitButton from "../SumbitButton";
+
 import { useState } from "react";
-import { UserFormValidation } from "@/lib/validation";
+import { PatientFormValidation, UserFormValidation } from "@/lib/validation";
 import { useRouter } from "next/navigation";
 import { createUser, getUser } from "@/lib/actions/patient.actions";
 import { FormFieldType } from "./PatientsForm";
+
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Doctors, GenderOptions, IdentificationTypes, PatientFormDefaultValues } from "@/constants";
 import { Label } from "../ui/label";
 import { SelectItem } from "../ui/select";
+
 import FileUploader from "../FileUploader";
-import { PatientFormValidation } from "@/lib/validation";
 import { registerPatient } from "@/lib/actions/patient.actions";
 
 
@@ -28,97 +32,64 @@ const RegisterForm = ({ user }: { user: User }) => {
   // This schema will be used to validate the form inputs.
 
   // 1. Define your form.
-  const form = useForm<z.infer<typeof PatientFormValidation>>({
-    //@ts-ignore
-    resolver: zodResolver(PatientFormValidation),
-        ...PatientFormDefaultValues,
-    defaultValues: {
+  type PatientFormData = z.infer<typeof PatientFormValidation>;
+
+const form = useForm<z.infer<typeof PatientFormValidation>>({
+  resolver: zodResolver(PatientFormValidation),
+  defaultValues: {
+    ...PatientFormDefaultValues,
     name: "",
     email: "",
     phone: "",
-    birthDate: new Date(),
-    gender: "Male",
-    address: "",
-    occupation: "",
-    emergencyContactName: "",
-    emergencyContactNumber: "",
-    primaryPhysician: "",
-    insuranceProvider: "",
-    insurancePolicyNumber: "",
-    allergies: "",
-    currentMedication: "",
-    familyMedicalHistory: "",
-    pastMedicalHistory: "",
-    identificationType: "",
-    identificationNumber: "",
-    identificationDocument: undefined,
-    privacyConsent: false,
-    },
-  });
+    // birthDate: new Date(), // Ensure this is a Date object
+  },
+});
 
-  // 2. Define a submit handler.
-  async function onSubmit(values: z.infer<typeof PatientFormValidation>) {
-    // ✅ This will be type-safe and validated.
-    setIsLoading(true);
+    async function handleFormSubmit(values: PatientFormData) {
+  setIsLoading(true);
 
-    let formData;
-    if (
-      values.identificationDocument &&
-      values.identificationDocument?.length > 0
-    ) {
-      const blobFile = new Blob([values.identificationDocument[0]], {
-        type: values.identificationDocument[0].type,
-      });
+  try {
+    let formData: FormData | undefined;
+
+    if (values.identificationDocument?.length) {
+      const file = values.identificationDocument[0];
+      const blobFile = new Blob([file], { type: file.type });
 
       formData = new FormData();
       formData.append("blobFile", blobFile);
-      formData.append("fileName", values.identificationDocument[0].name);
+      formData.append("fileName", file.name);
     }
 
-    try {
-      const patient = {
-        userId: user.$id,
-        name: values.name,
-        email: values.email,
-        phone: values.phone,
-        birthDate: new Date(values.birthDate),
-        gender: values.gender,
-        address: values.address,
-        occupation: values.occupation,
-        emergencyContactName: values.emergencyContactName,
-        emergencyContactNumber: values.emergencyContactNumber,
-        primaryPhysician: values.primaryPhysician,
-        insuranceProvider: values.insuranceProvider,
-        insurancePolicyNumber: values.insurancePolicyNumber,
-        allergies: values.allergies,
-        currentMedication: values.currentMedication,
-        familyMedicalHistory: values.familyMedicalHistory,
-        pastMedicalHistory: values.pastMedicalHistory,
-        identificationType: values.identificationType,
-        identificationNumber: values.identificationNumber,
-        identificationDocument: values.identificationDocument
-          ? formData
-          : undefined,
-        privacyConsent: values.privacyConsent,
-      };
+    const patientData = {
+      ...values,
+      userId: user.$id,
+      birthDate: new Date(values.birthDate),
+      identificationDocument: formData,
+      allergies: values.allergies ?? "",
+      currentMedication: values.currentMedication ?? "",
+      familyMedicalHistory: values.familyMedicalHistory ?? "",
+      pastMedicalHistory: values.pastMedicalHistory ?? "",
+      identificationType: values.identificationType ?? "", // Ensure this is always present
+      identificationNumber: values.identificationNumber ?? "", // Ensure this is always present
+    };
 
-      //@ts-ignore
-      const newPatient = await registerPatient(patient);
-
-       if (newPatient) {
-        router.push(`/patients/${user.$id}/new-appointment`);
-      }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsLoading(false);
+    const patient = await registerPatient(patientData);
+    
+    if (patient) {
+      router.push(`/patients/${user.$id}/new-appointment`);
     }
-  }
+
+  } catch (error) {
+    console.error("Error registering patient:", error);
+  } 
+    setIsLoading(false);
+  
+}
 
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={form.handleSubmit(handleFormSubmit)}
         className="space-y-12 flex-1"
       >
         <section className="space-y-4">
@@ -166,7 +137,7 @@ const RegisterForm = ({ user }: { user: User }) => {
           <CustomFormField
             control={form.control}
             fieldType={FormFieldType.DATE}
-            name="birthDay"
+            name="birthDate"
             label="Date of Birth"
           />
 
@@ -391,6 +362,7 @@ const RegisterForm = ({ user }: { user: User }) => {
           label="I acknowledge that I have reviewed and agree to the
                 privacy policy"
         />
+
 
         <SumbitButton isLoading={isLoading}> Get Started </SumbitButton>
       </form>

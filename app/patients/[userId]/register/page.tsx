@@ -2,14 +2,10 @@ import Image from "next/image";
 import React from "react";
 import Link from "next/link";
 import RegisterForm from "@/components/forms/RegisterForm";
-import {  getUser } from "@/lib/actions/patient.actions";
-import { redirect } from "next/navigation";
+import { getUser } from "@/lib/actions/patient.actions";
 
 const Register = async ({ params: { userId } }: SearchParamProps) => {
   const user = await getUser(userId); // Replace "userId" with the actual user ID you want to fetch
-//   const patient = await getPatient(userId);
-
-//    if (patient) redirect(`/patients/${userId}/new-appointment`);
 
   return (
     <div className="flex h-screen max-h-screen">
