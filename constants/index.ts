@@ -20,8 +20,8 @@ export const PatientFormDefaultValues = {
     identificationType: "Birth Certificate",
     identificationNumber: "",
     identificationDocument: [],
-    // treatmentConsent: false,
-    // disclosureConsent: false,
+    treatmentConsent: false,
+    disclosureConsent: false,
     privacyConsent: false,
 };
 
