@@ -1,14 +1,13 @@
-import {AppointmentDataTable} from '@/components/AppointmentDataTable'
-import StatCard from '@/components/StatCard'
-import{ columns, Payment }from '@/components/tables/Columns'
-import { getrecentAppointment } from '@/lib/actions/appointment.actions'
-import Image from 'next/image'
-import Link from 'next/link'
-import React from 'react'
+import { AppointmentDataTable } from "@/components/AppointmentDataTable";
+import StatCard from "@/components/StatCard";
+import { columns } from "@/components/tables/Columns";
+import { getrecentAppointment } from "@/lib/actions/appointment.actions";
+import Image from "next/image";
+import Link from "next/link";
+import React from "react";
 
 const Admin = async () => {
-    
-    const appointments = await getrecentAppointment()
+  const appointments = await getrecentAppointment();
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col space-y-14">
@@ -57,13 +56,10 @@ const Admin = async () => {
           />
         </section>
 
-        <AppointmentDataTable
-         columns={columns}
-         data={appointments.document}
-        />
+        <AppointmentDataTable columns={columns} data={appointments.document} />
       </main>
     </div>
   );
-}
+};
 
-export default Admin
+export default Admin;

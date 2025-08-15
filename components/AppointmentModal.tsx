@@ -1,4 +1,6 @@
-import React from 'react'
+'use client'
+
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,22 +9,47 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Button } from "./ui/button";
+import AppointmentForm from "./forms/AppointmentForm";
+import { Appointment } from "@/types/appwrite.types";
 
-const AppointmentModal = () => {
-  return (
-    <Dialog>
-      <DialogTrigger>Open</DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Are you absolutely sure?</DialogTitle>
-          <DialogDescription>
-            This action cannot be undone. This will permanently delete your
-            account and remove your data from our servers.
-          </DialogDescription>
-        </DialogHeader>
-      </DialogContent>
-    </Dialog>
-  );
-}
+const AppointmentModal = ({ type, patientId, userId, appointment }: { 
+  type: 'schedule'| 'cancel',
+  patientId: string,
+  userId: string,
+  appointment?: Appointment
+}) => {
 
-export default AppointmentModal
+  const [open, setOpen] = useState(false);
+
+return (
+  <Dialog open={open} onOpenChange={setOpen}>
+    <DialogTrigger asChild>
+      <Button variant='ghost' className={`capitalize ${type === 'schedule' && 'text-green-500'}`} >
+        {type}
+      </Button>
+    </DialogTrigger>
+    <DialogContent className="shad-dialog sm:max-w-md">
+      <DialogHeader className="mb-4 my-3">
+        <DialogTitle className="capitalize">
+          {type} Appointment
+        </DialogTitle>
+
+        <DialogDescription>
+          Please fill in the following deatils to {type} an appointment
+        </DialogDescription>
+      </DialogHeader>
+
+      <AppointmentForm 
+        userId={userId}
+        patientId={patientId}
+        type={type}
+        setOpen={setOpen}
+        appointment={appointment}
+      />
+    </DialogContent>
+  </Dialog>
+);
+};
+
+export default AppointmentModal;
