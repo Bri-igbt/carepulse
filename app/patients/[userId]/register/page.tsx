@@ -19,7 +19,7 @@ const Register = () => {
         const data = await getUser(userId);
         setUser(data);
       } catch (error) {
-        console.error("Failed to load user", error);
+        console.error("Failed to fetch user", error);
       } finally {
         setLoading(false);
       }
