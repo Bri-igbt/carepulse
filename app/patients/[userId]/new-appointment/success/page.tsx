@@ -1,17 +1,49 @@
+"use client";
+
+export const dynamic = "force-static";
+export const dynamicParams = true;
+
 import { Button } from "@/components/ui/button";
 import { Doctors } from "@/constants";
-import { getAppointment } from "@/lib/actions/appointment.actions";
 import { formatDateTime } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useParams, useSearchParams } from "next/navigation";
+import { getAppointment } from "@/lib/actions/appointment.actions";
 
-const Success = async ({
-  params: { userId },
-  searchParams,
-}: SearchParamProps) => {
-  const appointmentId = (searchParams?.appointmentId as string) || "";
-  const appointment = await getAppointment(appointmentId);
+const Success = () => {
+  const { userId } = useParams<{ userId: string }>();
+  const searchParams = useSearchParams();
+  const appointmentId = searchParams.get("appointmentId") || "";
+
+  const [appointment, setAppointment] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!appointmentId) return;
+
+    const fetchAppointment = async () => {
+      try {
+        const data = await getAppointment(appointmentId);
+        setAppointment(data);
+      } catch (error) {
+        console.error("Failed to fetch appointment", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAppointment();
+  }, [appointmentId]);
+
+  if (loading) {
+    return <div className="p-10">Loading...</div>;
+  }
+
+  if (!appointment) {
+    return <div className="p-10">Appointment not found</div>;
+  }
 
   const doctor = Doctors.find(
     (doc) => doc.name === appointment.primaryPhysician
@@ -57,18 +89,16 @@ const Success = async ({
               height={100}
               className="size-6"
             />
-
             <p className="whitespace-nowrap">Dr. {doctor?.name}</p>
           </div>
 
           <div className="flex gap-2">
             <Image
               src="/assets/icons/calendar.svg"
-              alt="calender"
+              alt="calendar"
               height={24}
               width={24}
             />
-
             <p>{formatDateTime(appointment.schedule).dateTime}</p>
           </div>
         </section>
@@ -80,7 +110,7 @@ const Success = async ({
         </Button>
 
         <p className="copyright mt-10 py-12">
-          © CarePluse {new Date().getFullYear()}
+          © CarePulse {new Date().getFullYear()}
         </p>
       </div>
     </div>

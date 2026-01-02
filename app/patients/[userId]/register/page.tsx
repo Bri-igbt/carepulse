@@ -1,11 +1,36 @@
+"use client";
+
 import Image from "next/image";
-import React from "react";
-import Link from "next/link";
+import React, { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import RegisterForm from "@/components/forms/RegisterForm";
 import { getUser } from "@/lib/actions/patient.actions";
 
-const Register = async ({ params: { userId } }: SearchParamProps) => {
-  const user = await getUser(userId); 
+const Register = () => {
+  const { userId } = useParams<{ userId: string }>();
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchUser = async () => {
+      try {
+        const data = await getUser(userId);
+        setUser(data);
+      } catch (error) {
+        console.error("Failed to load user", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [userId]);
+
+  if (loading) {
+    return <div className="p-10">Loading...</div>;
+  }
 
   return (
     <div className="flex h-screen max-h-screen">
@@ -21,9 +46,7 @@ const Register = async ({ params: { userId } }: SearchParamProps) => {
 
           <RegisterForm user={user} />
 
-            <p className="copyright py-12">
-              © 2025 CarePluse
-            </p>
+          <p className="copyright py-12">© 2025 CarePulse</p>
         </div>
       </section>
 
